@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KhoaCyber - Caesar Cipher</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(45deg, #1a1a2e, #16213e);
+            color: white;
+            text-align: center;
+            padding: 50px;
+            height: 100vh;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+            display: inline-block;
+            width: 90%;
+            max-width: 600px;
+        }
+
+        h1 {
+            color: #00FFAB;
+            font-size: 36px;
+            text-shadow: 2px 2px 8px #00FFAB;
+        }
+
+        input, button {
+            width: 80%;
+            padding: 15px;
+            margin: 10px;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+        }
+
+        input {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        button {
+            background: linear-gradient(45deg, #00FFAB, #00BFFF);
+            color: black;
+            cursor: pointer;
+            transition: background 0.3s ease-in-out, transform 0.2s;
+        }
+
+        button:hover {
+            background: linear-gradient(45deg, #00FFAB, #1e90ff);
+            transform: scale(1.05);
+        }
+
+        .buttons {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+        }
+
+        .output {
+            background-color: rgba(255, 255, 255, 0.2);
+            padding: 20px;
+            margin-top: 20px;
+            border-radius: 8px;
+            font-size: 18px;
+            text-align: left;
+            color: #00FFAB;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Caesar Cipher - KhoaCyber</h1>
+        <input type="text" id="text" placeholder="Nhập văn bản...">
+        <input type="number" id="shift" placeholder="Nhập số dịch chuyển..." min="1" max="25">
+
+        <div class="buttons">
+            <button onclick="encrypt()">Mã hóa</button>
+            <button onclick="decrypt()">Giải mã</button>
+        </div>
+
+        <div class="output" id="result"></div>
+    </div>
+
+    <script>
+        function encrypt() {
+            processCipher('encode');
+        }
+
+        function decrypt() {
+            processCipher('decode');
+        }
+
+        function processCipher(mode) {
+            let text = document.getElementById("text").value;
+            let shift = parseInt(document.getElementById("shift").value);
+            fetch("/caesar", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ text, shift, mode }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("result").innerHTML = `<strong>Kết quả:</strong> ${data.result}`;
+            })
+            .catch(error => console.error("Lỗi:", error));
+        }
+    </script>
+</body>
+</html>
