@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KhoaCyber - Caesar Cipher</title>
+    <title>KhoaCyber - Encryption Algorithms</title>
     <style>
         body {
             font-family: 'Arial', sans-serif;
@@ -21,7 +21,7 @@
             box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
             display: inline-block;
             width: 90%;
-            max-width: 600px;
+            max-width: 800px;
         }
 
         h1 {
@@ -30,13 +30,18 @@
             text-shadow: 2px 2px 8px #00FFAB;
         }
 
-        input, button {
+        select, input, button {
             width: 80%;
             padding: 15px;
             margin: 10px;
             border: none;
             border-radius: 8px;
             font-size: 18px;
+        }
+
+        select {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
         }
 
         input {
@@ -62,7 +67,7 @@
             margin-top: 20px;
         }
 
-        .output {
+        .output, .steps {
             background-color: rgba(255, 255, 255, 0.2);
             padding: 20px;
             margin-top: 20px;
@@ -71,44 +76,61 @@
             text-align: left;
             color: #00FFAB;
         }
+
+        #algorithm {
+            width: 60%;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Caesar Cipher - KhoaCyber</h1>
-        <input type="text" id="text" placeholder="Nhập văn bản...">
-        <input type="number" id="shift" placeholder="Nhập số dịch chuyển..." min="1" max="25">
+        <h1>KhoaCyber - Encryption Algorithms</h1>
+        
+        <label for="algorithm">Select Algorithm:</label>
+        <select id="algorithm">
+            <option value="caesar">Caesar Cipher</option>
+            <option value="vigenere">Vigenère Cipher</option>
+            <!-- Add other cipher options here -->
+        </select>
+
+        <input type="text" id="text" placeholder="Enter Plaint Text...">
+        <input type="number" id="shift" placeholder="Enter Shift..." min="1" max="25">
+        <input type="text" id="key" placeholder="Enter Key...">
 
         <div class="buttons">
-            <button onclick="encrypt()">Mã hóa</button>
-            <button onclick="decrypt()">Giải mã</button>
+            <button onclick="processCipher('encode')">Encryption</button>
+            <button onclick="processCipher('decode')">Decryption</button>
         </div>
 
         <div class="output" id="result"></div>
+        <div class="steps" id="steps"></div>
     </div>
 
     <script>
-        function encrypt() {
-            processCipher('encode');
-        }
-
-        function decrypt() {
-            processCipher('decode');
-        }
-
         function processCipher(mode) {
-            let text = document.getElementById("text").value;
-            let shift = parseInt(document.getElementById("shift").value);
-            fetch("/caesar", {
+            const algorithm = document.getElementById("algorithm").value;
+            const text = document.getElementById("text").value;
+            const shift = parseInt(document.getElementById("shift").value);
+            const key = document.getElementById("key").value;
+
+            const endpoint = algorithm === 'caesar' 
+                ? (mode === 'encode' ? '/caesar' : '/caesar')
+                : (algorithm === 'vigenere'
+                    ? (mode === 'encode' ? '/vigenere_encrypt' : '/vigenere_decrypt')
+                    : '');
+
+            fetch(endpoint, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ text, shift, mode }),
+                body: JSON.stringify({ text, shift, key, mode, algorithm }),
             })
             .then(response => response.json())
             .then(data => {
-                document.getElementById("result").innerHTML = `<strong>Kết quả:</strong> ${data.result}`;
+                document.getElementById("result").innerHTML = `<strong>Results:</strong> ${data.result}`;
+                document.getElementById("steps").innerHTML = `<strong>Process:</strong><br>${data.steps}`;
             })
             .catch(error => console.error("Lỗi:", error));
         }
