@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KhoaCyber - Caesar Cipher</title>
+    <title>KhoaCyber</title>
     <style>
         body {
             font-family: 'Arial', sans-serif;
@@ -30,7 +30,7 @@
             text-shadow: 2px 2px 8px #00FFAB;
         }
 
-        input, button {
+        input, button, select {
             width: 80%;
             padding: 15px;
             margin: 10px;
@@ -39,7 +39,7 @@
             font-size: 18px;
         }
 
-        input {
+        input, select {
             background-color: rgba(255, 255, 255, 0.2);
             color: white;
         }
@@ -71,13 +71,22 @@
             text-align: left;
             color: #00FFAB;
         }
+
+        .substitution-info {
+            margin-top: 15px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Caesar Cipher - KhoaCyber</h1>
+        <h1>KhoaCyber - Encryt & Decryt</h1>
         <input type="text" id="text" placeholder="Nhập văn bản...">
         <input type="number" id="shift" placeholder="Nhập số dịch chuyển..." min="1" max="25">
+        
+        <select id="cipher-type" onchange="toggleShiftInput()">
+            <option value="caesar">Caesar Cipher</option>
+            <option value="substitution">Substitution Cipher</option>
+        </select>
 
         <div class="buttons">
             <button onclick="encrypt()">Mã hóa</button>
@@ -85,9 +94,30 @@
         </div>
 
         <div class="output" id="result"></div>
+
+        <!-- Thông tin bảng hoán vị cho Substitution Cipher -->
+        <div class="substitution-info" id="substitution-info" style="display: none;">
+            <strong>Bảng hoán vị:</strong> <span id="pi"></span>
+            <button onclick="generateSubstitution()">Tạo bảng hoán vị mới</button>
+        </div>
     </div>
 
     <script>
+        const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        let substitution = "";  // Bảng hoán vị ngẫu nhiên
+
+        // Tạo bảng hoán vị ngẫu nhiên cho Substitution Cipher
+        function generateSubstitution() {
+            let letters = alphabet.split("");
+            for (let i = letters.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [letters[i], letters[j]] = [letters[j], letters[i]];  // Hoán đổi 2 vị trí ngẫu nhiên
+            }
+            substitution = letters.join("");
+            document.getElementById("pi").innerText = substitution;  // Hiển thị bảng hoán vị
+        }
+
+        // Hàm mã hóa bằng Caesar Cipher
         function caesarCipher(text, shift, mode='encode') {
             shift = shift % 26;
             let result = "";
@@ -112,19 +142,73 @@
             return result;
         }
 
-        function encrypt() {
-            const text = document.getElementById("text").value;
-            const shift = parseInt(document.getElementById("shift").value);
-            const result = caesarCipher(text, shift, 'encode');
-            document.getElementById("result").innerHTML = `<strong>Kết quả:</strong> ${result}`;
+        // Hàm mã hóa bằng Substitution Cipher
+        function substitutionCipher(text, mode='encode') {
+            let result = "";
+
+            for (let i = 0; i < text.length; i++) {
+                const char = text[i].toUpperCase();
+                const index = mode === 'encode' ? alphabet.indexOf(char) : substitution.indexOf(char);
+                if (index !== -1) {
+                    result += mode === 'encode' ? substitution[index] : alphabet[index];
+                } else {
+                    result += char;
+                }
+            }
+
+            return result;
         }
 
+        // Hàm xử lý chung để mã hóa
+        function encrypt() {
+            const text = document.getElementById("text").value;
+            const cipherType = document.getElementById("cipher-type").value;
+            let result = "";
+
+            if (cipherType === "caesar") {
+                const shift = parseInt(document.getElementById("shift").value);
+                result = caesarCipher(text, shift, 'encode');
+            } else if (cipherType === "substitution") {
+                result = substitutionCipher(text, 'encode');
+            }
+
+            document.getElementById("result").innerHTML = `<strong>Kết quả mã hóa:</strong> ${result}`;
+        }
+
+        // Hàm xử lý chung để giải mã
         function decrypt() {
             const text = document.getElementById("text").value;
-            const shift = parseInt(document.getElementById("shift").value);
-            const result = caesarCipher(text, shift, 'decode');
-            document.getElementById("result").innerHTML = `<strong>Kết quả:</strong> ${result}`;
+            const cipherType = document.getElementById("cipher-type").value;
+            let result = "";
+
+            if (cipherType === "caesar") {
+                const shift = parseInt(document.getElementById("shift").value);
+                result = caesarCipher(text, shift, 'decode');
+            } else if (cipherType === "substitution") {
+                result = substitutionCipher(text, 'decode');
+            }
+
+            document.getElementById("result").innerHTML = `<strong>Kết quả giải mã:</strong> ${result}`;
         }
+
+        // Tùy chọn hiện/ẩn ô nhập dịch chuyển cho Caesar Cipher
+        function toggleShiftInput() {
+            const cipherType = document.getElementById("cipher-type").value;
+            const shiftInput = document.getElementById("shift");
+            const substitutionInfo = document.getElementById("substitution-info");
+
+            if (cipherType === "caesar") {
+                shiftInput.style.display = "block";
+                substitutionInfo.style.display = "none";
+            } else if (cipherType === "substitution") {
+                shiftInput.style.display = "none";
+                substitutionInfo.style.display = "block";
+                generateSubstitution();  // Tạo bảng hoán vị mới khi chọn Substitution Cipher
+            }
+        }
+
+        // Tạo bảng hoán vị ngẫu nhiên khi trang tải
+        window.onload = generateSubstitution;
     </script>
 </body>
 </html>
