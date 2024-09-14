@@ -12,8 +12,10 @@
             text-align: center;
             padding: 50px;
             height: 100vh;
+            margin: 0; /* Ensure no default margin */
+            box-sizing: border-box; /* Apply box-sizing to body */
         }
-
+        
         .container {
             background: rgba(255, 255, 255, 0.1);
             border-radius: 15px;
@@ -22,47 +24,50 @@
             display: inline-block;
             width: 90%;
             max-width: 600px;
+            box-sizing: border-box; /* Ensure container does not shift */
         }
-
+        
         h1 {
             color: #00FFAB;
             font-size: 36px;
             text-shadow: 2px 2px 8px #00FFAB;
         }
-
+        
         input, button, select {
             width: 80%;
             padding: 15px;
-            margin: 10px;
+            margin: 10px auto; /* Center align input and select */
             border: none;
             border-radius: 8px;
             font-size: 18px;
+            box-sizing: border-box; /* Ensure padding and border are included in width */
+            display: block; /* Ensure inputs and selects are block-level */
         }
-
+        
         input, select {
             background-color: rgba(255, 255, 255, 0.2);
             color: white;
         }
-
+        
         button {
             background: linear-gradient(45deg, #00FFAB, #00BFFF);
             color: black;
             cursor: pointer;
             transition: background 0.3s ease-in-out, transform 0.2s;
         }
-
+        
         button:hover {
             background: linear-gradient(45deg, #00FFAB, #1e90ff);
             transform: scale(1.05);
         }
-
+        
         .buttons {
             display: flex;
             justify-content: space-around;
             margin-top: 20px;
         }
-
-        .output {
+        
+        .output, .steps {
             background-color: rgba(255, 255, 255, 0.2);
             padding: 20px;
             margin-top: 20px;
@@ -71,10 +76,11 @@
             text-align: left;
             color: #00FFAB;
         }
-
+        
         .substitution-info {
             margin-top: 15px;
         }
+        
     </style>
 </head>
 <body>
@@ -100,6 +106,12 @@
             <strong>Bảng hoán vị:</strong> <span id="pi"></span>
             <button onclick="generateSubstitution()">Tạo bảng hoán vị mới</button>
         </div>
+
+        <!-- Chi tiết các bước thực hiện -->
+        <div class="steps" id="steps" style="display: none;">
+            <strong>Chi tiết các bước:</strong>
+            <pre id="steps-details"></pre>
+        </div>
     </div>
 
     <script>
@@ -121,6 +133,7 @@
         function caesarCipher(text, shift, mode='encode') {
             shift = shift % 26;
             let result = "";
+            let steps = "";
 
             for (let i = 0; i < text.length; i++) {
                 let char = text[i];
@@ -131,31 +144,41 @@
 
                     if (mode === 'encode') {
                         char = String.fromCharCode(((code - base + shift) % 26) + base);
+                        steps += `Mã hóa '${text[i]}' thành '${char}'\n`;
                     } else {
                         char = String.fromCharCode(((code - base - shift + 26) % 26) + base);
+                        steps += `Giải mã '${text[i]}' thành '${char}'\n`;
                     }
+                } else {
+                    steps += `Bỏ qua '${text[i]}'\n`;
                 }
 
                 result += char;
             }
 
+            document.getElementById("steps-details").innerText = steps;
             return result;
         }
 
         // Hàm mã hóa bằng Substitution Cipher
         function substitutionCipher(text, mode='encode') {
             let result = "";
+            let steps = "";
 
             for (let i = 0; i < text.length; i++) {
                 const char = text[i].toUpperCase();
                 const index = mode === 'encode' ? alphabet.indexOf(char) : substitution.indexOf(char);
                 if (index !== -1) {
-                    result += mode === 'encode' ? substitution[index] : alphabet[index];
+                    const outputChar = mode === 'encode' ? substitution[index] : alphabet[index];
+                    steps += `${mode === 'encode' ? `Mã hóa` : `Giải mã`} '${char}' thành '${outputChar}'\n`;
+                    result += outputChar;
                 } else {
+                    steps += `Bỏ qua '${text[i]}'\n`;
                     result += char;
                 }
             }
 
+            document.getElementById("steps-details").innerText = steps;
             return result;
         }
 
@@ -173,6 +196,7 @@
             }
 
             document.getElementById("result").innerHTML = `<strong>Kết quả mã hóa:</strong> ${result}`;
+            document.getElementById("steps").style.display = "block";  // Hiển thị chi tiết các bước
         }
 
         // Hàm xử lý chung để giải mã
@@ -189,6 +213,7 @@
             }
 
             document.getElementById("result").innerHTML = `<strong>Kết quả giải mã:</strong> ${result}`;
+            document.getElementById("steps").style.display = "block";  // Hiển thị chi tiết các bước
         }
 
         // Tùy chọn hiện/ẩn ô nhập dịch chuyển cho Caesar Cipher
