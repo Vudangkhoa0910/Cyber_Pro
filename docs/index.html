@@ -12,8 +12,8 @@
             text-align: center;
             padding: 50px;
             height: 100vh;
-            margin: 0; /* Ensure no default margin */
-            box-sizing: border-box; /* Apply box-sizing to body */
+            margin: 0;
+            box-sizing: border-box; 
         }
         
         .container {
@@ -88,10 +88,13 @@
         <h1>KhoaCyber - Encryt & Decryt</h1>
         <input type="text" id="text" placeholder="Nhập văn bản...">
         <input type="number" id="shift" placeholder="Nhập số dịch chuyển..." min="1" max="25">
+        <input type="number" id="affine-a" placeholder="Nhập giá trị a (1-25)" min="1" max="25" style="display: none;">
+        <input type="number" id="affine-b" placeholder="Nhập giá trị b (0-25)" min="0" max="25" style="display: none;"> 
         
         <select id="cipher-type" onchange="toggleShiftInput()">
             <option value="caesar">Caesar Cipher</option>
             <option value="substitution">Substitution Cipher</option>
+            <option value="affine">Affine Cipher</option>
         </select>
 
         <div class="buttons">
@@ -199,7 +202,7 @@
             document.getElementById("steps").style.display = "block";  // Hiển thị chi tiết các bước
         }
 
-        // Hàm xử lý chung để giải mã
+        // Hàm xử lý chung để giải mã3
         function decrypt() {
             const text = document.getElementById("text").value;
             const cipherType = document.getElementById("cipher-type").value;
@@ -232,6 +235,126 @@
             }
         }
 
+        // Hàm tính gcd (ước chung lớn nhất) để kiểm tra nếu a và 26 nguyên tố cùng nhau
+        function gcd(a, b) {
+            while (b) {
+                let t = b;
+                b = a % b;
+                a = t;
+            }
+            return a;
+        }
+
+        // Hàm tìm nghịch đảo modulo của a
+        function modInverse(a, m) {
+            for (let x = 1; x < m; x++) {
+                if ((a * x) % m === 1) {
+                    return x;
+                }
+            }
+            return -1;  // Không tồn tại nghịch đảo nếu gcd(a, m) != 1
+        }
+
+        // Hàm mã hóa và giải mã bằng Affine Cipher
+        function affineCipher(text, a, b, mode = 'encode') {
+            const m = 26;  // Số ký tự trong bảng chữ cái
+            let result = "";
+            let steps = "";
+
+            if (gcd(a, m) !== 1) {
+                alert("a và 26 phải nguyên tố cùng nhau (gcd(a, 26) = 1). Hãy chọn giá trị a khác.");
+                return;
+            }
+
+            const aInverse = mode === 'decode' ? modInverse(a, m) : null;
+
+            for (let i = 0; i < text.length; i++) {
+                let char = text[i].toUpperCase();
+                if (char.match(/[A-Z]/)) {
+                    let x = char.charCodeAt(0) - 65;  // Chuyển ký tự thành số (A = 0, B = 1, ..., Z = 25)
+                    let y;
+                    if (mode === 'encode') {
+                        y = (a * x + b) % m;
+                        steps += `Mã hóa '${char}' thành '${String.fromCharCode(y + 65)}'\n`;
+                    } else {
+                        y = (aInverse * (x - b + m)) % m;  // Dùng nghịch đảo của a
+                        steps += `Giải mã '${char}' thành '${String.fromCharCode(y + 65)}'\n`;
+                    }
+                    result += String.fromCharCode(y + 65);
+                } else {
+                    result += char;
+                    steps += `Bỏ qua '${text[i]}'\n`;
+                }
+            }
+
+            document.getElementById("steps-details").innerText = steps;
+            return result;
+        }
+
+        // Cập nhật hàm encrypt để xử lý Affine Cipher
+        function encrypt() {
+            const text = document.getElementById("text").value;
+            const cipherType = document.getElementById("cipher-type").value;
+            let result = "";
+
+            if (cipherType === "caesar") {
+                const shift = parseInt(document.getElementById("shift").value);
+                result = caesarCipher(text, shift, 'encode');
+            } else if (cipherType === "substitution") {
+                result = substitutionCipher(text, 'encode');
+            } else if (cipherType === "affine") {
+                const a = parseInt(document.getElementById("affine-a").value);
+                const b = parseInt(document.getElementById("affine-b").value);
+                result = affineCipher(text, a, b, 'encode');
+            }
+
+            document.getElementById("result").innerHTML = `<strong>Kết quả mã hóa:</strong> ${result}`;
+            document.getElementById("steps").style.display = "block";  // Hiển thị chi tiết các bước
+        }
+
+        // Cập nhật hàm decrypt để xử lý Affine Cipher
+        function decrypt() {
+            const text = document.getElementById("text").value;
+            const cipherType = document.getElementById("cipher-type").value;
+            let result = "";
+
+            if (cipherType === "caesar") {
+                const shift = parseInt(document.getElementById("shift").value);
+                result = caesarCipher(text, shift, 'decode');
+            } else if (cipherType === "substitution") {
+                result = substitutionCipher(text, 'decode');
+            } else if (cipherType === "affine") {
+                const a = parseInt(document.getElementById("affine-a").value);
+                const b = parseInt(document.getElementById("affine-b").value);
+                result = affineCipher(text, a, b, 'decode');
+            }
+
+            document.getElementById("result").innerHTML = `<strong>Kết quả giải mã:</strong> ${result}`;
+            document.getElementById("steps").style.display = "block";  // Hiển thị chi tiết các bước
+        }
+
+        // Cập nhật toggleShiftInput để hiển thị các ô nhập cho Affine Cipher
+        function toggleShiftInput() {
+            const cipherType = document.getElementById("cipher-type").value;
+            const shiftInput = document.getElementById("shift");
+            const affineInputs = [document.getElementById("affine-a"), document.getElementById("affine-b")];
+            const substitutionInfo = document.getElementById("substitution-info");
+
+            if (cipherType === "caesar") {
+                shiftInput.style.display = "block";
+                affineInputs.forEach(input => input.style.display = "none");
+                substitutionInfo.style.display = "none";
+            } else if (cipherType === "substitution") {
+                shiftInput.style.display = "none";
+                affineInputs.forEach(input => input.style.display = "none");
+                substitutionInfo.style.display = "block";
+                generateSubstitution();  // Tạo bảng hoán vị mới khi chọn Substitution Cipher
+            } else if (cipherType === "affine") {
+                shiftInput.style.display = "none";
+                affineInputs.forEach(input => input.style.display = "block");
+                substitutionInfo.style.display = "none";
+            }
+        }
         // Tạo bảng hoán vị ngẫu nhiên khi trang tải
         window.onload = generateSubstitution;
     </script>
