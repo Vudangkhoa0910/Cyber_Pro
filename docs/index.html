@@ -478,7 +478,7 @@
             }
         }
 
-        // Xử lí file đầu vào
+        // Xử lý file đầu vào
         let fileContent = "";  // Nội dung file được tải lên
 
         // Hàm đọc file
@@ -493,7 +493,7 @@
                 reader.readAsText(file);
             }
         }
-    
+
         // Hàm tải kết quả mã hóa hoặc giải mã xuống
         function downloadResult() {
             const result = document.getElementById("result").innerText;
@@ -503,13 +503,53 @@
             link.download = "result.txt";
             link.click();
         }
-    
+
+        // Hàm mã hóa và giải mã bằng Vigenere Cipher
+        function vigenereCipher(text, keyword, mode) {
+            if (!keyword) {
+                alert('Vui lòng nhập từ khóa cho Vigenere Cipher');
+                return "";
+            }
+
+            keyword = keyword.toUpperCase();
+            text = text.toUpperCase();
+            let result = "";
+            let steps = "";
+            let keywordIndex = 0;
+
+            for (let i = 0; i < text.length; i++) {
+                const char = text[i];
+                if (char.match(/[A-Z]/)) {  // Chỉ xử lý các ký tự là chữ cái
+                    const shift = keyword.charCodeAt(keywordIndex % keyword.length) - 65;  // Tính dịch chuyển từ từ khóa
+                    const base = 65;
+                    let newChar;
+
+                    if (mode === 'encode') {
+                        newChar = String.fromCharCode(((char.charCodeAt(0) - base + shift) % 26) + base);
+                        steps += `Mã hóa '${char}' với dịch chuyển ${shift} thành '${newChar}'\n`;
+                    } else {
+                        newChar = String.fromCharCode(((char.charCodeAt(0) - base - shift + 26) % 26) + base);
+                        steps += `Giải mã '${char}' với dịch chuyển ${shift} thành '${newChar}'\n`;
+                    }
+
+                    result += newChar;
+                    keywordIndex++;
+                } else {
+                    result += char;  // Giữ nguyên ký tự không phải chữ cái
+                    steps += `Bỏ qua ký tự '${text[i]}'\n`;
+                }
+            }
+
+            document.getElementById("steps-details").innerText = steps;
+            return result;
+        }
+
         // Hàm xử lý chung để mã hóa
         function encrypt() {
             let text = document.getElementById("text").value || fileContent;  
             const cipherType = document.getElementById("cipher-type").value;
             let result = "";
-    
+
             if (cipherType === "caesar") {
                 const shift = parseInt(document.getElementById("shift").value);
                 result = caesarCipher(text, shift, 'encode');
@@ -519,19 +559,22 @@
                 const a = parseInt(document.getElementById("affine-a").value);
                 const b = parseInt(document.getElementById("affine-b").value);
                 result = affineCipher(text, a, b, 'encode');
+            } else if (cipherType === "vigenere") {
+                const keyword = document.getElementById("vigenere-keyword").value;
+                result = vigenereCipher(text, keyword, 'encode');
             }
-    
+
             document.getElementById("result").innerHTML = `<strong>Kết quả mã hóa:</strong> ${result}`;
             document.getElementById("steps").style.display = "block"; 
             document.getElementById("download-btn").style.display = "inline";  
         }
-    
+
         // Hàm xử lý chung để giải mã
         function decrypt() {
             let text = document.getElementById("text").value || fileContent;  
             const cipherType = document.getElementById("cipher-type").value;
             let result = "";
-    
+
             if (cipherType === "caesar") {
                 const shift = parseInt(document.getElementById("shift").value);
                 result = caesarCipher(text, shift, 'decode');
@@ -541,8 +584,11 @@
                 const a = parseInt(document.getElementById("affine-a").value);
                 const b = parseInt(document.getElementById("affine-b").value);
                 result = affineCipher(text, a, b, 'decode');
+            } else if (cipherType === "vigenere") {
+                const keyword = document.getElementById("vigenere-keyword").value;
+                result = vigenereCipher(text, keyword, 'decode');
             }
-    
+
             document.getElementById("result").innerHTML = `<strong>Kết quả giải mã:</strong> ${result}`;
             document.getElementById("steps").style.display = "block"; 
             document.getElementById("download-btn").style.display = "inline";  
